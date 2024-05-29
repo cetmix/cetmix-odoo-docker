@@ -1,10 +1,10 @@
 # This image is designed to be used with Cetmix Tower <https://cetmix.com/tower>
 # However it can be used for standalone deployments too.
 # Parts of both Odoo and OCA Docker files are being used. 
-FROM python:3.10-slim-bullseye
+FROM python:3.8-slim-bullseye
 MAINTAINER Cetmix OU <https://cetmix.com>
 
-ARG ODOO_VERSION=16.0
+ARG ODOO_VERSION=14.0
 ARG DOCKER_ODOO_UID=9999  
 ARG DOCKER_ODOO_GID=9999
 ARG POSTGRES_VERSION=14
@@ -15,7 +15,7 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 ENV LANG C.UTF-8
 
 # Install dependencies as describe in Odoo documentation
-# https://www.odoo.com/documentation/16.0/administration/install/install.html#setup-install-source-linux-git
+# https://www.odoo.com/documentation/14.0/administration/install/install.html#setup-install-source-linux-git
 # We also install  virtualenv package which will be created lated to create virtual environment and some dependencies needed for building packages
 
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends curl python3-pip libldap2-dev libpq-dev libsasl2-dev \
