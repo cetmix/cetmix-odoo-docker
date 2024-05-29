@@ -1,4 +1,9 @@
+# This image is designed to be used with Cetmix Tower <https://cetmix.com/tower>
+# However it can be used for standalone deployments too.
+# Parts of both Odoo and OCA Docker files are being used. 
 FROM python:3.10-slim-bullseye
+MAINTAINER Cetmix OU <https://cetmix.com>
+
 ARG ODOO_VERSION=16.0
 ARG DOCKER_ODOO_UID=9999  
 ARG DOCKER_ODOO_GID=9999
@@ -11,7 +16,7 @@ ENV LANG C.UTF-8
 
 # Install dependencies as describe in Odoo documentation
 # https://www.odoo.com/documentation/16.0/administration/install/install.html#setup-install-source-linux-git
-# We also install  virtualenv package which will be created lated to create virtual environment
+# We also install  virtualenv package which will be created lated to create virtual environment and some dependencies needed for building packages
 
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends curl python3-pip libldap2-dev libpq-dev libsasl2-dev \
     python3-dev python3-virtualenv build-essential gnupg npm git \
@@ -81,13 +86,17 @@ COPY ./odoo.conf /etc/odoo/
 COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
 
 
-# Create directory for extra addons
-RUN mkdir -p /tmp/getaddons/addons
+# Create directories for extra addons and filestore, set ownership to `odoo`
+ENV ADDONS_PATH=/opt/odoo/addons
+ENV ADDONS_DIR=/opt/extra-addons
+RUN mkdir -p /tmp/getaddons/addons && \
+    chown odoo /etc/odoo/odoo.conf \
+    && chown -R odoo $ADDONS_PATH \
+    && mkdir -p /var/lib/odoo && chown -R odoo /var/lib/odoo
 
 # Clone extra addons
 # This arg is used for cache invalidation so every layer below will be rebuilt
-ARG EXTRA_ADDONS_RELEASE=default_1
-ENV ADDONS_DIR=/opt/odoo/extra-addons
+ARG EXTRA_ADDONS_RELEASE=default
 # Copy addons list file
 COPY ./addons.yml /tmp/getaddons
 
@@ -107,22 +116,23 @@ RUN find $ADDONS_DIR -type d -maxdepth 1 -exec setuptools-odoo-get-requirements 
     && cat /tmp/getaddons/addons_requirements.txt
 
 
-# List external dependencies
-ENV ADDONS_PATH=/opt/odoo/addons
-RUN manifestoo -d $ADDONS_PATH list-external-dependencies deb --transitive
+# Install external dependencies
+RUN deps=$(manifestoo -d $ADDONS_DIR list-external-dependencies deb --transitive --ignore-missing) && \
+    if [ -n "$deps" ]; then \
+        apt-get update -qq && \
+        DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends ${deps}; \
+    fi
 
 # This PEP 503 index uses odoo addons from OCA and redirects the rest to PyPI,
 # in effect hiding all non-OCA Odoo addons that are on PyPI.
 ENV PIP_INDEX_URL=https://wheelhouse.odoo-community.org/oca-simple-and-pypi
 
 # Install requirements and clean up
-RUN pip install --no-cache-dir -r /tmp/getaddons/addons_requirements.txt && rm -rf /tmp/getaddons && ls -lah $ADDONS_DIR
+RUN pip install --no-cache-dir -r /tmp/getaddons/addons_requirements.txt && \
+    rm -rf /tmp/getaddons && \
+    ls -lah $ADDONS_DIR && \
+    chown -R odoo $ADDONS_DIR
 
-# Set permissions and Mount /var/lib/odoo to allow restoring filestore
-RUN chown odoo /etc/odoo/odoo.conf \
-    && chown -R odoo $ADDONS_DIR \
-    && chown -R odoo $ADDONS_PATH \
-    && mkdir -p /var/lib/odoo && chown -R odoo /var/lib/odoo
 VOLUME ["/var/lib/odoo"]
 
 # Expose Odoo services

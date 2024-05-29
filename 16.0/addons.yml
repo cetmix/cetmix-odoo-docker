@@ -1,67 +1,14 @@
-# ./project:
-#     remotes:
-#         oca: https://github.com/oca/project.git
-#         cetmix: https://github.com/oca/project.git
-#         task_code: https://github.com/oca/project.git
-#     merges:
-#         -
-#             remote: oca
-#             ref: "16.0"
-#         -
-#             remote: cetmix
-#             ref: refs/pull/1189/head
-#         -
-#             remote: task_code
-#             ref: refs/pull/1209/head
-#     target: oca 16.0
+# This file is designed to be used qit Git Aggregator
+# Check https://github.com/acsone/git-aggregator for more details and documentation 
 
-# ./stock-logistics-workflow:
-#     remotes:
-#         remote_1: https://github.com/oca/stock-logistics-workflow.git
-#         remote_2: https://github.com/oca/stock-logistics-workflow.git
-#         remote_3: https://github.com/oca/stock-logistics-workflow.git
-#     merges:
-#         -
-#             remote: remote_1
-#             ref: "16.0"
-#         -
-#             remote: remote_2
-#             ref: refs/pull/1422/head
-#         -
-#             remote: remote_3
-#             ref: refs/pull/1428/head
-#     target: remote_1
-
-
-# ./social:
-#     remotes:
-#         oca: https://github.com/oca/social.git
-#     merges:
-#         -
-#             remote: oca
-#             ref: "16.0"
-#             depth: 1
-#     target: oca 16.0
-
-    
-# ./report-print-send:
-#     remotes:
-#         oca: https://github.com/oca/report-print-send.git
-#     merges:
-#         -
-#             remote: oca
-#             ref: "16.0"
-#             depth: 1
-#     target: oca 16.0
-
-./reporting-engine:
+./oca-web:
     remotes:
-        oca: https://github.com/oca/reporting-engine.git
+        oca: https://github.com/oca/web.git
     merges:
         -
             remote: oca
             ref: "16.0"
             depth: 1
-    target: oca 16.0
+    target: oca
 
     

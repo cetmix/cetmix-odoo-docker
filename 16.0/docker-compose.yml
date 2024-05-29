@@ -1,7 +1,10 @@
 version: '3.1'
 services:
   web:
-    image: test_odoo:16.0
+    build:
+      dockerfile: ./Dockerfile
+      platforms:
+        - "linux/amd64"
     depends_on:
       - db
     ports:
