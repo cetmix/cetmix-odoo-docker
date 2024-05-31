@@ -8,6 +8,8 @@ ARG ODOO_VERSION=16.0
 ARG DOCKER_ODOO_UID=9999  
 ARG DOCKER_ODOO_GID=9999
 ARG POSTGRES_VERSION=14
+# This token will be used to clone private GitHub repos
+ARG GITHUB_TOKEN=<token>
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
