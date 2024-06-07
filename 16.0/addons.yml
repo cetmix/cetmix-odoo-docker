@@ -1,14 +1,12 @@
 # This file is designed to be used qit Git Aggregator
 # Check https://github.com/acsone/git-aggregator for more details and documentation 
 
-./oca-web:
+./oca-reporting-engine:
     remotes:
-        oca: https://github.com/oca/web.git
+        oca: https://github.com/oca/reporting-engine.git
     merges:
         -
             remote: oca
             ref: "16.0"
             depth: 1
     target: oca
-
-    

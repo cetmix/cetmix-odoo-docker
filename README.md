@@ -30,6 +30,7 @@ Available build arguments:
 - `DOCKER_ODOO_UID` User ID of `odoo` user. Default value `9999`  
 - `DOCKER_ODOO_GID` Group ID of `odoo` user. Default value `9999`
 - `POSTGRES_VERSION` Postgres version. Default is 14
+- `TARGETARCH` Architecture to build image for. Will be detected automatically, specify custom value if needed. Eg `amd64` or `arm64` 
 - `ODOO_HEAD` HEAD of Odoo git branch. Allows to checkout Odoo source code at custom HEAD. Default value == `ODOO_VERSION`
 - `ODOO_ORG_REPO` Github repository with Odoo source code. You can use a custom one if needed. Default value is Odoo official repo: `odoo/odoo`
 - `EXTRA_ADDONS_RELEASE` this is a technical argument used to prevent caching of the extra addons installation layers. Use [Cetmix Tower](https://cetmix.com/tower) {{ tower.tools.now }} system variable as a value to prevent cache usage for all commands after this argument.

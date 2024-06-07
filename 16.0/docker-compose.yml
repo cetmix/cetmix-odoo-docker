@@ -3,8 +3,6 @@ services:
   web:
     build:
       dockerfile: ./Dockerfile
-      platforms:
-        - "linux/amd64"
     depends_on:
       - db
     ports:
