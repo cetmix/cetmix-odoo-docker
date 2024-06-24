@@ -48,5 +48,10 @@ ENV PIP_INDEX_URL=https://wheelhouse.odoo-community.org/oca-simple-and-pypi
 
 # Install extra addons
 RUN cd $ADDONS_DIR && pip install -e .
+
+# Set DB manager password
+ARG DB_MANAGER_PASSWORD=suchMuchPassword
+RUN grep -q '^admin_passwd =' my.cfg && sed -i "s/^admin_passwd = .*/admin_passwd = ${DB_MANAGER_PASSWORD}/" my.cfg || echo "admin_passwd = ${DB_MANAGER_PASSWORD}" >> $ODOO_RC
+
 # Set default user when running the container
 USER odoo
