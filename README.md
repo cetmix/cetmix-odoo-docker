@@ -34,6 +34,8 @@ Available build arguments:
 - `ODOO_HEAD` HEAD of Odoo git branch. Allows to checkout Odoo source code at custom HEAD. Default value == `ODOO_VERSION`
 - `ODOO_ORG_REPO` Github repository with Odoo source code. You can use a custom one if needed. Default value is Odoo official repo: `odoo/odoo`
 - `EXTRA_ADDONS_RELEASE` this is a technical argument used to prevent caching of the extra addons installation layers. Use [Cetmix Tower](https://cetmix.com/tower) {{ tower.tools.now }} system variable as a value to prevent cache usage for all commands after this argument.
+- `DB_MANAGER_PASSWORD` Odoo database manager password. Default is `suchMuchPassword`
+
 
 
 ## Usage
@@ -41,3 +43,5 @@ Available build arguments:
 Files for each Odoo version are located in the corresponding directories. Although [Cetmix Tower](https://cetmix.com/tower) uses its own file management system you can build your own image using provided files.
 Use `addons.yml` file to add custom modules. Check [Git Aggregator](https://github.com/acsone/git-aggregator) documentation for details.
 There is also a simple `docker-compose.yml` file which is meant for fast and easy testing.
+
+**NB** Default Odoo database manager password is `suchMuchPassword`. You can provide you
