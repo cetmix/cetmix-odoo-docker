@@ -60,7 +60,8 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install tools needed for custom addons installation
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir manifestoo git-aggregator
+    pip install --no-cache-dir manifestoo git-aggregator click-odoo
+
 
 # Install Odoo python dependencies
 RUN curl https://raw.githubusercontent.com/odoo/odoo/${ODOO_VERSION}/requirements.txt > /tmp/requirements.txt && \
