@@ -43,5 +43,3 @@ Available build arguments:
 Files for each Odoo version are located in the corresponding directories. Although [Cetmix Tower](https://cetmix.com/tower) uses its own file management system you can build your own image using provided files.
 Use `addons.yml` file to add custom modules. Check [Git Aggregator](https://github.com/acsone/git-aggregator) documentation for details.
 There is also a simple `docker-compose.yml` file which is meant for fast and easy testing.
-
-**NB** Default Odoo database manager password is `suchMuchPassword`. You can provide you
