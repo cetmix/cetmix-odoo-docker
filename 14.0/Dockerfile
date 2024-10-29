@@ -9,6 +9,7 @@ ARG TARGETARCH
 ENV PIP_NO_CACHE_DIR=1
 # This token will be used to clone private GitHub repos
 ARG GITHUB_TOKEN=<token>
+ARG TMP_ADDONS_DIR=/tmp/getaddons
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
@@ -89,7 +90,7 @@ RUN printf "[options]\ndata_dir = /var/lib/odoo\n" > /etc/odoo.conf && chown odo
 
 # Create directories for extra addons and filestore, set ownership to `odoo`
 ENV ADDONS_LOCATION=/opt/odoo/addons
-RUN mkdir -p /tmp/getaddons/addons \
+RUN mkdir -p $TMP_ADDONS_DIR/addons \
     && chown odoo $ADDONS_LOCATION \
     && mkdir -p /var/lib/odoo && chown odoo /var/lib/odoo
 
@@ -99,7 +100,7 @@ RUN mkdir -p /tmp/getaddons/addons \
 ARG EXTRA_ADDONS_RELEASE=put_any_value_here
 
 # Copy addons list file
-COPY ./addons.yml /tmp/getaddons
+COPY ./addons.yml $TMP_ADDONS_DIR
 
 # Git settings used by GitAggregator
 ENV GIT_USERNAME="Doge"
@@ -107,14 +108,39 @@ ENV GIT_EMAIL="doge@meme.example.com"
 
 # Run git-aggregator
 RUN git config --global user.email ${GIT_EMAIL} && git config --global user.name ${GIT_USERNAME} && \
-    cd /tmp/getaddons && gitaggregate -c  /tmp/getaddons/addons.yml --expand-env
+    cd $TMP_ADDONS_DIR && gitaggregate -c  $TMP_ADDONS_DIR/addons.yml --expand-env
 
-# Move all addons to their final destination
+# Prepare the destination directory
 ENV ADDONS_DIR=/opt/extra-addons
 RUN mkdir $ADDONS_DIR \
-    && chown odoo $ADDONS_DIR \
-    && cd /tmp/getaddons && find . -mindepth 2 -maxdepth 2 -type d -not \( -name '.*' -o -name 'setup' \) -exec mv -f {} $ADDONS_DIR \; \
-    && ls -lah $ADDONS_DIR && rm -rf /tmp/getaddons
+    && chown odoo $ADDONS_DIR
+
+# Move all addons to their final destination
+RUN bash -c ' \
+    # Function to check each directory \
+    check_directory() { \
+        local dir="$1"; \
+        if [[ -f "$dir/__manifest__.py" ]]; then \
+            mv "$dir" "$ADDONS_DIR"; \
+        else \
+            for subdir in "$dir"/*/; do \
+                if [[ -d "$subdir" ]]; then \
+                    check_directory "$subdir"; \
+                fi; \
+            done; \
+        fi; \
+    }; \
+    # First, check if __manifest__.py exists in the top-level directory \
+    if [[ -f "$TOP_LEVEL_DIR/__manifest__.py" ]]; then \
+        mv "$TMP_ADDONS_DIR" "$ADDONS_DIR"; \
+    else \
+        # If not found in the root, start checking subdirectories \
+        check_directory "$TMP_ADDONS_DIR"; \
+    fi; \
+    '
+
+# List addons
+RUN  ls -lah $ADDONS_DIR && rm -rf $TMP_ADDONS_DIR
 
 # Install external dependencies
 RUN deps=$(manifestoo -d $ADDONS_DIR list-external-dependencies deb --transitive --ignore-missing) && \

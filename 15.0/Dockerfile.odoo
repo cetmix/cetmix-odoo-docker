@@ -13,6 +13,7 @@ ARG TARGETARCH
 ENV PIP_NO_CACHE_DIR=1
 # This token will be used to clone private GitHub repos
 ARG GITHUB_TOKEN=<token>
+ARG TMP_ADDONS_DIR=/tmp/getaddons
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
@@ -94,7 +95,7 @@ RUN printf "[options]\ndata_dir = /var/lib/odoo\n" > /etc/odoo.conf && chown odo
 
 # Create directories for extra addons and filestore, set ownership to `odoo`
 ENV ADDONS_LOCATION=/opt/odoo/addons
-RUN mkdir -p /tmp/getaddons/addons \
+RUN mkdir -p $TMP_ADDONS_DIR/addons \
     && chown odoo $ADDONS_LOCATION \
     && mkdir -p /var/lib/odoo && chown odoo /var/lib/odoo
 
