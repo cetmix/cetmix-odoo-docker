@@ -1,11 +1,7 @@
-# This image is designed to be used with Cetmix Tower <https://cetmix.com/tower>
-# However it can be used for standalone deployments too.
 # Parts of both Odoo and OCA Docker files are being used. 
-# 
-# This image contains build Odoo core image tools for adding extra addons.
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 
-ARG ODOO_VERSION=17.0
+ARG ODOO_VERSION=18.0
 ARG DOCKER_ODOO_UID=9999  
 ARG DOCKER_ODOO_GID=9999
 ARG POSTGRES_VERSION=17
@@ -21,7 +17,7 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 ENV LANG=C.UTF-8
 
 # Install dependencies as describe in Odoo documentation
-# https://www.odoo.com/documentation/17.0/administration/install/install.html#setup-install-source-linux-git
+# https://www.odoo.com/documentation/18.0/administration/install/install.html#setup-install-source-linux-git
 # We also install  virtualenv package which will be created lated to create virtual environment and some dependencies needed for building packages
 
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends curl python3-pip libldap2-dev libpq-dev libsasl2-dev \
@@ -99,6 +95,72 @@ RUN mkdir -p $TMP_ADDONS_DIR/addons \
     && chown odoo $ADDONS_LOCATION \
     && mkdir -p /var/lib/odoo && chown odoo /var/lib/odoo
 
+    
+# Clone extra addons
+# This arg is used for cache invalidation so every layer below will be rebuilt
+ARG EXTRA_ADDONS_RELEASE=put_any_value_here
+
+# Copy addons list file
+COPY ./addons.yml $TMP_ADDONS_DIR
+
+# Git settings used by GitAggregator
+ENV GIT_USERNAME="Doge"
+ENV GIT_EMAIL="doge@meme.example.com"
+
+# Run git-aggregator
+RUN git config --global user.email ${GIT_EMAIL} && git config --global user.name ${GIT_USERNAME} && \
+    cd $TMP_ADDONS_DIR && gitaggregate -c  $TMP_ADDONS_DIR/addons.yml --expand-env
+
+# Prepare the destination directory
+ENV ADDONS_DIR=/opt/extra-addons
+RUN mkdir $ADDONS_DIR \
+    && chown odoo $ADDONS_DIR
+
+# Move all addons to their final destination
+RUN bash -c ' \
+    # Function to check each directory \
+    check_directory() { \
+        local dir="$1"; \
+        if [[ -f "$dir/__manifest__.py" ]]; then \
+            mv "$dir" "$ADDONS_DIR"; \
+        else \
+            for subdir in "$dir"/*/; do \
+                if [[ -d "$subdir" ]]; then \
+                    check_directory "$subdir"; \
+                fi; \
+            done; \
+        fi; \
+    }; \
+    # First, check if __manifest__.py exists in the top-level directory \
+    if [[ -f "$TOP_LEVEL_DIR/__manifest__.py" ]]; then \
+        mv "$TMP_ADDONS_DIR" "$ADDONS_DIR"; \
+    else \
+        # If not found in the root, start checking subdirectories \
+        check_directory "$TMP_ADDONS_DIR"; \
+    fi; \
+    '
+
+# List addons
+RUN  ls -lah $ADDONS_DIR && rm -rf $TMP_ADDONS_DIR
+
+# Install external dependencies
+RUN deps=$(manifestoo -d $ADDONS_DIR list-external-dependencies deb --transitive --ignore-missing) && \
+    if [ -n "$deps" ]; then \
+        apt-get update -qq && \
+        DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends ${deps}; \
+    fi
+
+
+# Create hatch config file
+RUN printf "[build-system]\nrequires = ['hatchling', 'hatch-odoo']\nbuild-backend = 'hatchling.build'\n\n[project]\nname = 'extra-addons'\nversion = '1.0'\ndynamic = ['dependencies']\n\n[tool.hatch.metadata.hooks.odoo-addons-dependencies]\n\n[tool.hatch.build.hooks.odoo-addons-dirs]\n\n[tool.hatch-odoo]\nodoo_version_override = '18.0'\ndependencies = ['click-odoo-contrib']\naddons_dirs = ['.']\n" > $ADDONS_DIR/pyproject.toml
+
+# This PEP 503 index uses odoo addons from OCA and redirects the rest to PyPI,
+# in effect hiding all non-OCA Odoo addons that are on PyPI.
+ENV PIP_INDEX_URL=https://wheelhouse.odoo-community.org/oca-simple-and-pypi
+
+# Install extra addons
+RUN cd $ADDONS_DIR && pip install -e .
+
 # Expose filestore
 VOLUME ["/var/lib/odoo"]
 
@@ -107,6 +169,11 @@ EXPOSE 8069 8071 8072
 
 # Set the default config file
 ENV ODOO_RC=/etc/odoo.conf
+
+# Set db manager password
+ARG DB_MANAGER_PASSWORD=suchMuchPassword
+RUN grep -q '^admin_passwd =' my.cfg && sed -i "s/^admin_passwd = .*/admin_passwd = ${DB_MANAGER_PASSWORD}/" my.cfg || echo "admin_passwd = ${DB_MANAGER_PASSWORD}" >> $ODOO_RC
+
 
 # Set default user when running the container
 USER odoo

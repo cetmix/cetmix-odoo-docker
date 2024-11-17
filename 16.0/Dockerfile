@@ -1,5 +1,5 @@
 # Parts of both Odoo and OCA Docker files are being used. 
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim-bookworm
 
 ARG ODOO_VERSION=16.0
 ARG DOCKER_ODOO_UID=9999  
@@ -14,7 +14,7 @@ ARG TMP_ADDONS_DIR=/tmp/getaddons
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 # Generate locale C.UTF-8 for postgres and general locale data
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 
 # Install dependencies as describe in Odoo documentation
 # https://www.odoo.com/documentation/16.0/administration/install/install.html#setup-install-source-linux-git
@@ -39,7 +39,7 @@ RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --n
 RUN if [ -z "${TARGETARCH}" ]; then \
     TARGETARCH="$(dpkg --print-architecture)"; \
     fi; \
-    curl -sSL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bullseye_${TARGETARCH}.deb -o /tmp/wkhtml.deb \
+    curl -sSL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_${TARGETARCH}.deb -o /tmp/wkhtml.deb \
     && apt-get update -qq \
     && dpkg --force-depends -i /tmp/wkhtml.deb \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qq -f --no-install-recommends \
@@ -47,7 +47,7 @@ RUN if [ -z "${TARGETARCH}" ]; then \
 
     # Install latest version of the PG client
 RUN curl -sSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" > /etc/apt/sources.list.d/pgclient.list \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bookworm-pgdg main" > /etc/apt/sources.list.d/pgclient.list \
     && apt-get update -qq \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qq postgresql-client-${POSTGRES_VERSION}
 
@@ -168,7 +168,7 @@ VOLUME ["/var/lib/odoo"]
 EXPOSE 8069 8071 8072
 
 # Set the default config file
-ENV ODOO_RC /etc/odoo.conf
+ENV ODOO_RC=/etc/odoo.conf
 
 # Set db manager password
 ARG DB_MANAGER_PASSWORD=suchMuchPassword

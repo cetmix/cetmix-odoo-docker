@@ -3,9 +3,9 @@
 # Parts of both Odoo and OCA Docker files are being used. 
 # 
 # This image contains build Odoo core image tools for adding extra addons.
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 
-ARG ODOO_VERSION=17.0
+ARG ODOO_VERSION=18.0
 ARG DOCKER_ODOO_UID=9999  
 ARG DOCKER_ODOO_GID=9999
 ARG POSTGRES_VERSION=17
@@ -21,7 +21,7 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 ENV LANG=C.UTF-8
 
 # Install dependencies as describe in Odoo documentation
-# https://www.odoo.com/documentation/17.0/administration/install/install.html#setup-install-source-linux-git
+# https://www.odoo.com/documentation/18.0/administration/install/install.html#setup-install-source-linux-git
 # We also install  virtualenv package which will be created lated to create virtual environment and some dependencies needed for building packages
 
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends curl python3-pip libldap2-dev libpq-dev libsasl2-dev \
