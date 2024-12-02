@@ -1,5 +1,5 @@
 # Parts of both Odoo and OCA Docker files are being used. 
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 ARG ODOO_VERSION=17.0
 ARG DOCKER_ODOO_UID=9999  
