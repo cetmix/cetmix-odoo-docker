@@ -37,7 +37,9 @@ RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --n
     # some other build tools
     swig \
     libffi-dev \
-    pkg-config
+    pkg-config \
+    # Needed to print barcodes
+    libcairo2-dev
 
 # Install wkhtmltopdf
 RUN if [ -z "${TARGETARCH}" ]; then \
@@ -72,6 +74,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Install Odoo python dependencies
 RUN curl https://raw.githubusercontent.com/odoo/odoo/${ODOO_VERSION}/requirements.txt > /tmp/requirements.txt && \
     pip3 install -r /tmp/requirements.txt
+
+# Istall libcairo2 to print barcodes
+RUN pip3 install rlPyCairo
 
 # Add "odoo" user. We use same guid uid as in the official Odoo image
 RUN groupadd --gid ${DOCKER_ODOO_GID} odoo && useradd odoo -u ${DOCKER_ODOO_UID} -g ${DOCKER_ODOO_GID} -m -s /bin/bash
