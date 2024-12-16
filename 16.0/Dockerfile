@@ -71,7 +71,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 RUN curl https://raw.githubusercontent.com/odoo/odoo/${ODOO_VERSION}/requirements.txt > /tmp/requirements.txt && \
     pip3 install -r /tmp/requirements.txt
 
-# Istall libcairo2 to print barcodes
+# Required  print barcodes
 RUN pip3 install rlPyCairo
 
 # Add "odoo" user. We use same guid uid as in the official Odoo image

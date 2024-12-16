@@ -33,7 +33,10 @@ RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --n
     # some other build tools
     swig \
     libffi-dev \
-    pkg-config
+    pkg-config \
+    # Needed to print barcodes
+    libcairo2-dev
+
 
 # Install wkhtmltopdf
 RUN if [ -z "${TARGETARCH}" ]; then \
@@ -64,6 +67,8 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir manifestoo git-aggregator click-odoo
 
+# Required  print barcodes
+RUN pip3 install rlPyCairo
 
 # Install Odoo python dependencies
 RUN curl https://raw.githubusercontent.com/odoo/odoo/${ODOO_VERSION}/requirements.txt > /tmp/requirements.txt && \
