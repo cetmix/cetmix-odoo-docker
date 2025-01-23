@@ -75,6 +75,10 @@ RUN pip3 install rlPyCairo
 RUN curl https://raw.githubusercontent.com/odoo/odoo/${ODOO_VERSION}/requirements.txt > /tmp/requirements.txt && \
     pip3 install -r /tmp/requirements.txt
 
+# Install additional Odoo python dependencies
+RUN curl https://raw.githubusercontent.com/cetmix/cetmix-odoo-docker/main/${ODOO_VERSION}/extra-requirements.txt > /tmp/extra-requirements.txt && \
+    pip3 install -r /tmp/extra-requirements.txt
+
 # Add "odoo" user. We use same guid uid as in the official Odoo image
 RUN groupadd --gid ${DOCKER_ODOO_GID} odoo && useradd odoo -u ${DOCKER_ODOO_UID} -g ${DOCKER_ODOO_GID} -m -s /bin/bash
 
