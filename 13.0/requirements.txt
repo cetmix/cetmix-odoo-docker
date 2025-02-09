@@ -1,0 +1,54 @@
+Babel==2.12.1
+chardet==4.0.0
+decorator==5.1.1
+docutils==0.18.1
+ebaysdk==2.1.5
+
+# Use gevent and greenlet versions compatible with Odoo 13 on Python 3.8.
+gevent==1.5.0
+greenlet==0.4.15
+
+Jinja2==3.1.2
+libsass==0.20.1
+lxml==4.9.1
+Mako==1.2.3
+MarkupSafe==2.1.1
+
+# Python 3 includes unittest.mock, so the external "mock" package is no longer needed.
+# mock==2.0.0
+
+num2words==0.5.10
+ofxparse==0.19
+passlib==1.7.4
+Pillow==9.5.0
+polib==1.2.0
+psutil==5.9.5
+psycopg2==2.9.6
+
+pydot==1.4.2
+python-ldap==3.4.3 ; sys_platform != 'win32'
+pyparsing==3.0.9
+PyPDF2==1.26.0
+pyserial==3.5
+python-dateutil==2.8.2
+pytz==2023.3
+pyusb==1.2.1
+qrcode==7.3
+reportlab==3.6.12
+requests==2.31.0
+zeep==4.1.0
+
+# Note: The vatnumber package (1.2) still uses the legacy use_2to3 flag.
+# You may need to either patch it locally or install an older setuptools (e.g. <58)
+# when installing vatnumber.
+vatnumber==1.2
+
+vobject==0.9.7
+Werkzeug==0.14.1 ; sys_platform != 'win32'
+Werkzeug==0.16.0 ; sys_platform == 'win32'
+XlsxWriter==3.0.9
+xlwt==1.3.0
+xlrd==2.0.1
+
+# On Windows, replace pypiwin32 with the current pywin32.
+pywin32==305 ; sys_platform == 'win32'
