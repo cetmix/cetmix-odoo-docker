@@ -168,11 +168,6 @@ EXPOSE 8069 8071 8072
 # Set the default config file
 ENV ODOO_RC=/etc/odoo.conf
 
-# Set db manager password
-ARG DB_MANAGER_PASSWORD=suchMuchPassword
-RUN grep -q '^admin_passwd =' my.cfg && sed -i "s/^admin_passwd = .*/admin_passwd = ${DB_MANAGER_PASSWORD}/" my.cfg || echo "admin_passwd = ${DB_MANAGER_PASSWORD}" >> $ODOO_RC
-
-
 # Set default user when running the container
 USER odoo
 

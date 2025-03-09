@@ -28,6 +28,19 @@ check_config "db_port" "$PORT"
 check_config "db_user" "$USER"
 check_config "db_password" "$PASSWORD"
 
+# Set db admin password
+# Using /tmp in order to avoid permission errors
+if [ -n "$ADMIN_PASSWORD" ]; then
+    cp "$ODOO_RC" /tmp/odoo.conf.tmp
+    if grep -q "^admin_passwd" /tmp/odoo.conf.tmp; then
+        sed -i "s/^admin_passwd.*/admin_passwd = $ADMIN_PASSWORD/" /tmp/odoo.conf.tmp
+    else
+        echo "admin_passwd = $ADMIN_PASSWORD" >> /tmp/odoo.conf.tmp
+    fi
+    cat /tmp/odoo.conf.tmp > "$ODOO_RC"
+    rm /tmp/odoo.conf.tmp
+fi
+
 case "$1" in
     -- | odoo)
         shift
