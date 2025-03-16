@@ -15,6 +15,9 @@ ENV PIP_NO_CACHE_DIR=1
 ARG GITHUB_TOKEN=<token>
 ARG TMP_ADDONS_DIR=/tmp/getaddons
 
+# Possible values: "ce" for community edition, "ee" for enterprise edition
+ARG ODOO_EDITION=ce
+
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 # Generate locale C.UTF-8 for postgres and general locale data
@@ -87,6 +90,20 @@ RUN mkdir /tmp/getodoo \
     && (curl -sSL https://github.com/$ODOO_ORG_REPO/tarball/$ODOO_HEAD | tar -C /tmp/getodoo -xz) \
     && mv /tmp/getodoo/* /opt/odoo \
     && rmdir /tmp/getodoo
+    
+# Install Odoo EE
+ARG ODOO_EE_REPO=odoo/enterprise
+ARG ODOO_HEAD_EE=${ODOO_VERSION}
+
+RUN if [ "$ODOO_EDITION" = "ee" ]; then \
+    mkdir /tmp/getodoo \
+    && (curl -sSL https://${GITHUB_TOKEN}:x-oauth-basic@github.com/$ODOO_EE_REPO/tarball/$ODOO_HEAD_EE | tar -C /tmp/getodoo -xz) \
+    && mv /tmp/getodoo/* /tmp/getodoo/odoo_ee \
+    && mv /tmp/getodoo/odoo_ee/* /opt/odoo/addons \
+    && rm -rf /tmp/getodoo; \
+    fi
+
+# Install Odoo
 RUN pip install --no-cache-dir -e /opt/odoo --config-setting=editable-mode=compat
 
 # Create odoo config file 

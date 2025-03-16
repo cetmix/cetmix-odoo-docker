@@ -14,6 +14,10 @@ ENV PIP_NO_CACHE_DIR=1
 # This token will be used to clone private GitHub repos
 ARG GITHUB_TOKEN=<token>
 ARG TMP_ADDONS_DIR=/tmp/getaddons
+
+# Possible values: "ce" for community edition, "ee" for enterprise edition
+ARG ODOO_EDITION=ce
+
 # Install aws cli. Used for s3 backup management and other aws operations
 # Set to "yes" to install
 ARG INSTALL_AWS
@@ -104,8 +108,21 @@ RUN mkdir /tmp/getodoo \
     && (curl -sSL https://github.com/$ODOO_ORG_REPO/tarball/$ODOO_HEAD | tar -C /tmp/getodoo -xz) \
     && mv /tmp/getodoo/* /opt/odoo \
     && rmdir /tmp/getodoo
-RUN pip install --no-cache-dir -e /opt/odoo --config-setting=editable-mode=compat
+    
+# Install Odoo EE
+ARG ODOO_EE_REPO=odoo/enterprise
+ARG ODOO_HEAD_EE=${ODOO_VERSION}
 
+RUN if [ "$ODOO_EDITION" = "ee" ]; then \
+    mkdir /tmp/getodoo \
+    && (curl -sSL https://${GITHUB_TOKEN}:x-oauth-basic@github.com/$ODOO_EE_REPO/tarball/$ODOO_HEAD_EE | tar -C /tmp/getodoo -xz) \
+    && mv /tmp/getodoo/* /tmp/getodoo/odoo_ee \
+    && mv /tmp/getodoo/odoo_ee/* /opt/odoo/addons \
+    && rm -rf /tmp/getodoo; \
+    fi
+
+# Install Odoo
+RUN pip install --no-cache-dir -e /opt/odoo --config-setting=editable-mode=compat
 # Create odoo config file 
 RUN printf "[options]\ndata_dir = /var/lib/odoo\n" > /etc/odoo.conf && chown odoo /etc/odoo.conf
 
