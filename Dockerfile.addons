@@ -1,12 +1,19 @@
+# Copyright 2024 Cetmix OU <https://cetmix.com>
 # This image is designed to be used with Cetmix Tower <https://cetmix.com/tower>
 # However it can be used for standalone deployments too.
 # Parts of both Odoo and OCA Docker files are being used. 
 #
 # This installs extra addons in the image built using Dockerfile.odoo
-FROM tower-odoo-core:18.0
+ARG ODOO_VERSION=<odoo_version>
+FROM tower-odoo-core:${ODOO_VERSION}
 MAINTAINER Cetmix OU <https://cetmix.com>
-# This token will be used to clone private GitHub repos
+
+# Tokens to clone private repos
 ARG GITHUB_TOKEN=<token>
+ARG BITBUCKET_TOKEN=<token>
+ARG GITLAB_TOKEN_NAME=<token>
+ARG GITLAB_TOKEN=<token>
+
 ARG TMP_ADDONS_DIR=/tmp/getaddons
 
 USER root
@@ -66,7 +73,7 @@ RUN deps=$(manifestoo -d $ADDONS_DIR list-external-dependencies deb --transitive
     fi
 
 # Create hatch config file
-RUN printf "[build-system]\nrequires = ['hatchling', 'hatch-odoo']\nbuild-backend = 'hatchling.build'\n\n[project]\nname = 'extra-addons'\nversion = '1.0'\ndynamic = ['dependencies']\n\n[tool.hatch.metadata.hooks.odoo-addons-dependencies]\n\n[tool.hatch.build.hooks.odoo-addons-dirs]\n\n[tool.hatch-odoo]\nodoo_version_override = '18.0'\ndependencies = ['click-odoo-contrib']\naddons_dirs = ['.']\n" > $ADDONS_DIR/pyproject.toml
+RUN printf "[build-system]\nrequires = ['hatchling', 'hatch-odoo']\nbuild-backend = 'hatchling.build'\n\n[project]\nname = 'extra-addons'\nversion = '1.0'\ndynamic = ['dependencies']\n\n[tool.hatch.metadata.hooks.odoo-addons-dependencies]\n\n[tool.hatch.build.hooks.odoo-addons-dirs]\n\n[tool.hatch-odoo]\nodoo_version_override = '16.0'\ndependencies = ['click-odoo-contrib']\naddons_dirs = ['.']\n" > $ADDONS_DIR/pyproject.toml
 
 # This PEP 503 index uses odoo addons from OCA and redirects the rest to PyPI,
 # in effect hiding all non-OCA Odoo addons that are on PyPI.

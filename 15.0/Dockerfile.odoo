@@ -1,3 +1,4 @@
+# Copyright 2024 Cetmix OU <https://cetmix.com>
 # This image is designed to be used with Cetmix Tower <https://cetmix.com/tower>
 # However it can be used for standalone deployments too.
 # Parts of both Odoo and OCA Docker files are being used. 
