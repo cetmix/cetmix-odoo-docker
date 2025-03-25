@@ -73,7 +73,7 @@ RUN deps=$(manifestoo -d $ADDONS_DIR list-external-dependencies deb --transitive
     fi
 
 # Create hatch config file
-RUN printf "[build-system]\nrequires = ['hatchling', 'hatch-odoo']\nbuild-backend = 'hatchling.build'\n\n[project]\nname = 'extra-addons'\nversion = '1.0'\ndynamic = ['dependencies']\n\n[tool.hatch.metadata.hooks.odoo-addons-dependencies]\n\n[tool.hatch.build.hooks.odoo-addons-dirs]\n\n[tool.hatch-odoo]\nodoo_version_override = '16.0'\ndependencies = ['click-odoo-contrib']\naddons_dirs = ['.']\n" > $ADDONS_DIR/pyproject.toml
+RUN printf "[build-system]\nrequires = ['hatchling', 'hatch-odoo']\nbuild-backend = 'hatchling.build'\n\n[project]\nname = 'extra-addons'\nversion = '1.0'\ndynamic = ['dependencies']\n\n[tool.hatch.metadata.hooks.odoo-addons-dependencies]\n\n[tool.hatch.build.hooks.odoo-addons-dirs]\n\n[tool.hatch-odoo]\nodoo_version_override = '%s'\ndependencies = ['click-odoo-contrib']\naddons_dirs = ['.']\n" "$ODOO_VERSION" > $ADDONS_DIR/pyproject.toml
 
 # This PEP 503 index uses odoo addons from OCA and redirects the rest to PyPI,
 # in effect hiding all non-OCA Odoo addons that are on PyPI.
