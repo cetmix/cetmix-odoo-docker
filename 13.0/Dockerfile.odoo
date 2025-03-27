@@ -100,7 +100,7 @@ RUN if [ "$ODOO_EDITION" = "ee" ]; then \
     mkdir /tmp/getodoo \
     && (curl -sSL https://${GITHUB_TOKEN}:x-oauth-basic@github.com/$ODOO_EE_REPO/tarball/$ODOO_HEAD_EE | tar -C /tmp/getodoo -xz) \
     && mv /tmp/getodoo/* /tmp/getodoo/odoo_ee \
-    && mv /tmp/getodoo/odoo_ee/* /opt/odoo/addons \
+    && mv -n /tmp/getodoo/odoo_ee/* /opt/odoo/addons \
     && rm -rf /tmp/getodoo; \
     fi
 
