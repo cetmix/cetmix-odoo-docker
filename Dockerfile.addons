@@ -1,18 +1,19 @@
-# Copyright 2024 Cetmix OU <https://cetmix.com>
 # This image is designed to be used with Cetmix Tower <https://cetmix.com/tower>
 # However it can be used for standalone deployments too.
 # Parts of both Odoo and OCA Docker files are being used. 
+# Copyright 2024 Cetmix OU <https://cetmix.com>
 #
 # This installs extra addons in the image built using Dockerfile.odoo
-ARG ODOO_VERSION=<odoo_version>
+ARG ODOO_VERSION
 FROM tower-odoo-core:${ODOO_VERSION}
-MAINTAINER Cetmix OU <https://cetmix.com>
+LABEL maintainer="Cetmix OU <https://cetmix.com>"
+ARG ODOO_VERSION
 
 # Tokens to clone private repos
-ARG GITHUB_TOKEN=<token>
-ARG BITBUCKET_TOKEN=<token>
-ARG GITLAB_TOKEN_NAME=<token>
-ARG GITLAB_TOKEN=<token>
+ARG GITHUB_TOKEN
+ARG BITBUCKET_TOKEN
+ARG GITLAB_TOKEN_NAME
+ARG GITLAB_TOKEN
 
 ARG TMP_ADDONS_DIR=/tmp/getaddons
 
@@ -40,27 +41,31 @@ RUN mkdir $ADDONS_DIR \
 
 # Move all addons to their final destination
 RUN bash -c ' \
-    # Function to check each directory \
+    # Function to check each directory and skip symlinks \
     check_directory() { \
         local dir="$1"; \
+        # If this is a symlink, do nothing \
+        if [[ -L "$dir" ]]; then \
+            return; \
+        fi; \
         if [[ -f "$dir/__manifest__.py" ]]; then \
-            mv "$dir" "$ADDONS_DIR"; \
+            cp -r -P "$dir" "$ADDONS_DIR"; \
         else \
             for subdir in "$dir"/*/; do \
-                if [[ -d "$subdir" ]]; then \
+                if [[ -d "$subdir" && ! -L "$subdir" ]]; then \
                     check_directory "$subdir"; \
                 fi; \
             done; \
         fi; \
     }; \
-    # First, check if __manifest__.py exists in the top-level directory \
+    # If __manifest__.py exists in the top-level directory, copy the entire directory \
     if [[ -f "$TOP_LEVEL_DIR/__manifest__.py" ]]; then \
-        mv "$TMP_ADDONS_DIR" "$ADDONS_DIR"; \
+        cp -r -P "$TMP_ADDONS_DIR" "$ADDONS_DIR"; \
     else \
-        # If not found in the root, start checking subdirectories \
         check_directory "$TMP_ADDONS_DIR"; \
     fi; \
     '
+RUN rm -rf $TMP_ADDONS_DIR
 
 # List addons
 RUN  ls -lah $ADDONS_DIR && rm -rf $TMP_ADDONS_DIR
@@ -73,7 +78,8 @@ RUN deps=$(manifestoo -d $ADDONS_DIR list-external-dependencies deb --transitive
     fi
 
 # Create hatch config file
-RUN printf "[build-system]\nrequires = ['hatchling', 'hatch-odoo']\nbuild-backend = 'hatchling.build'\n\n[project]\nname = 'extra-addons'\nversion = '1.0'\ndynamic = ['dependencies']\n\n[tool.hatch.metadata.hooks.odoo-addons-dependencies]\n\n[tool.hatch.build.hooks.odoo-addons-dirs]\n\n[tool.hatch-odoo]\nodoo_version_override = '%s'\ndependencies = ['click-odoo-contrib']\naddons_dirs = ['.']\n" "$ODOO_VERSION" > $ADDONS_DIR/pyproject.toml
+RUN printf "[build-system]\nrequires = ['hatchling', 'hatch-odoo']\nbuild-backend = 'hatchling.build'\n\n[project]\nname = 'extra-addons'\nversion = '1.0'\ndynamic = ['dependencies']\n\n[tool.hatch.metadata.hooks.odoo-addons-dependencies]\n\n[tool.hatch.build.hooks.odoo-addons-dirs]\n\n[tool.hatch-odoo]\nodoo_version_override = \"%s\"\ndependencies = ['click-odoo-contrib']\naddons_dirs = ['.']\n" "$ODOO_VERSION" > /opt/extra-addons/pyproject.toml
+
 
 # This PEP 503 index uses odoo addons from OCA and redirects the rest to PyPI,
 # in effect hiding all non-OCA Odoo addons that are on PyPI.
