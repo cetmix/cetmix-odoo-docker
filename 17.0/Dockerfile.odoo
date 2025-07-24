@@ -15,13 +15,13 @@ ENV PIP_NO_CACHE_DIR=1
 # This token will be used to clone private GitHub repos
 ARG GITHUB_TOKEN=<token>
 ARG TMP_ADDONS_DIR=/tmp/getaddons
-
 # Possible values: "ce" for community edition, "ee" for enterprise edition
 ARG ODOO_EDITION=ce
-
 # Install aws cli. Used for s3 backup management and other aws operations
 # Set to "yes" to install
 ARG INSTALL_AWS
+# Install crudini. Used for editing ini files on the fly
+ARG INSTALL_CRUDINI
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
@@ -72,6 +72,11 @@ RUN npm install -g rtlcss
 # Update and install AWS CLI if INSTALL_AWS is set to "yes"
 RUN if [ "$INSTALL_AWS" = "yes" ]; then \
         DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; \
+    fi
+
+# Install crudini if INSTALL_CRUDINI is set to "yes"
+RUN if [ "$INSTALL_CRUDINI" = "yes" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y crudini; \
     fi
 
 # Enable VENV
