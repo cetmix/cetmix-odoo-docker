@@ -1,0 +1,13 @@
+# This is a basic template. Disconnect your file from it to add your own repos
+# Check https://github.com/acsone/git-aggregator for possible configuration options
+
+# This is how you can use GitHub token for private GitHub repos
+./odoo-enterprise:
+    remotes:
+        remote_1: https://${GITHUB_TOKEN}:x-oauth-basic@github.com/odoo/enterprise.git
+    merges:
+        -
+            remote: remote_1
+            ref: "19.0"
+            depth: 1
+    target: remote_1
