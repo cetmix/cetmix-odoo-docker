@@ -97,7 +97,7 @@ RUN curl https://raw.githubusercontent.com/odoo/odoo/${ODOO_VERSION}/requirement
 RUN pip3 install rlPyCairo
 
 # Pin the fonttool library to work with Odoo 16.0
-RUN pip install "fonttools==4.39.4"
+RUN pip install "fonttools==4.37.1"
 
 # Add "odoo" user. We use same guid uid as in the official Odoo image
 RUN groupadd --gid ${DOCKER_ODOO_GID} odoo && useradd odoo -u ${DOCKER_ODOO_UID} -g ${DOCKER_ODOO_GID} -m -s /bin/bash
