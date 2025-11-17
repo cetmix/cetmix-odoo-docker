@@ -86,7 +86,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install tools needed for custom addons installation
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir manifestoo git-aggregator click-odoo
+    pip install --no-cache-dir manifestoo git-aggregator click-odoo setuptools wheel
 
 # Required  print barcodes
 RUN pip3 install rlPyCairo
