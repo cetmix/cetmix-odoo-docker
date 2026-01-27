@@ -22,6 +22,8 @@ ARG ODOO_EDITION=ce
 ARG INSTALL_AWS
 # Install crudini. Used for editing ini files on the fly
 ARG INSTALL_CRUDINI
+# Install phonenumbers. Used by peppol and other addons
+ARG INSTALL_PHONENUMBERS=yes
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
@@ -96,6 +98,11 @@ RUN pip3 install rlPyCairo
 # Install Odoo python dependencies
 RUN curl https://raw.githubusercontent.com/odoo/odoo/${ODOO_VERSION}/requirements.txt > /tmp/requirements.txt && \
     pip3 install -r /tmp/requirements.txt
+
+# Install phonenumbers if INSTALL_PHONENUMBERS is set to "yes"
+RUN if [ "$INSTALL_PHONENUMBERS" = "yes" ]; then \
+    pip3 install phonenumbers; \
+    fi
 
 # Add "odoo" user. We use same guid uid as in the official Odoo image
 RUN groupadd --gid ${DOCKER_ODOO_GID} odoo && useradd odoo -u ${DOCKER_ODOO_UID} -g ${DOCKER_ODOO_GID} -m -s /bin/bash
