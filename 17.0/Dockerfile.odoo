@@ -87,9 +87,11 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install tools needed for custom addons installation
+# Check if pkg_resources is installed correctly
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir manifestoo git-aggregator click-odoo setuptools wheel
-
+    pip install --no-cache-dir manifestoo git-aggregator click-odoo "setuptools<82" wheel && \
+    /opt/odoo-venv/bin/python -c "import pkg_resources; print('OK', pkg_resources.__file__)"
+    
 # Required  print barcodes
 RUN pip3 install rlPyCairo
 
