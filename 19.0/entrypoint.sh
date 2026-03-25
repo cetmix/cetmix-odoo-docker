@@ -28,6 +28,27 @@ check_config "db_port" "$PORT"
 check_config "db_user" "$USER"
 check_config "db_password" "$PASSWORD"
 
+# Persist DB connection settings to odoo.conf (same values as passed on the CLI)
+cp "$ODOO_RC" /tmp/odoo.conf.tmp
+i=0
+while [ $i -lt ${#DB_ARGS[@]} ]; do
+    key="${DB_ARGS[$i]}"
+    val="${DB_ARGS[$((i+1))]}"
+    pname="${key#--}"
+    case "$key" in
+        --db_host|--db_port|--db_user|--db_password)
+            if grep -qE "^\s*\b${pname}\b\s*=" /tmp/odoo.conf.tmp; then
+                sed -i -E "s|^\s*${pname}\s*=.*|${pname} = ${val}|" /tmp/odoo.conf.tmp
+            else
+                echo "${pname} = ${val}" >> /tmp/odoo.conf.tmp
+            fi
+            ;;
+    esac
+    i=$((i+2))
+done
+cat /tmp/odoo.conf.tmp > "$ODOO_RC"
+rm /tmp/odoo.conf.tmp
+
 # Set db admin password
 # Using /tmp in order to avoid permission errors
 if [ -n "$ADMIN_PASSWORD" ]; then
