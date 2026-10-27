@@ -1,7 +1,10 @@
 # This is a basic template. Disconnect your file from it to add your own repos
 # Check https://github.com/acsone/git-aggregator for possible configuration options
 
-# This is how you can use GitHub token for private GitHub repos
+# This is how you can use GitHub token for private GitHub repos.
+# The token is read from the GITHUB_TOKEN environment variable, which is set from the
+# BuildKit secret "github_token" (docker build --secret id=github_token,env=GITHUB_TOKEN).
+# The same applies to BITBUCKET_TOKEN, GITLAB_TOKEN_NAME and GITLAB_TOKEN.
 ./odoo-enterprise:
     remotes:
         remote_1: https://x-access-token:${GITHUB_TOKEN}@github.com/odoo/enterprise.git
