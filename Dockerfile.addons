@@ -10,7 +10,7 @@ LABEL maintainer="Cetmix OU <https://cetmix.com>"
 ARG ODOO_VERSION
 
 # Tokens to clone private repos
-ARG GITHUB_TOKEN
+# GitHub token is passed as the BuildKit secret "github_token" (see gitaggregate step)
 ARG BITBUCKET_TOKEN
 ARG GITLAB_TOKEN_NAME
 ARG GITLAB_TOKEN
@@ -31,7 +31,8 @@ ENV GIT_USERNAME="Doge"
 ENV GIT_EMAIL="doge@meme.example.com"
 
 # Run git-aggregator
-RUN git config --global user.email ${GIT_EMAIL} && git config --global user.name ${GIT_USERNAME} && \
+RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN \
+    git config --global user.email ${GIT_EMAIL} && git config --global user.name ${GIT_USERNAME} && \
     cd $TMP_ADDONS_DIR && gitaggregate -c  $TMP_ADDONS_DIR/addons.yml --expand-env
 
 # Prepare the destination directory

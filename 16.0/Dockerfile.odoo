@@ -15,8 +15,8 @@ ARG DOCKER_ODOO_GID=9999
 ARG POSTGRES_VERSION=16
 ARG TARGETARCH
 ENV PIP_NO_CACHE_DIR=1
-# This token will be used to clone private GitHub repos
-ARG GITHUB_TOKEN=<token>
+# The GitHub token for Enterprise is passed as the BuildKit secret "github_token"
+# (docker build --secret id=github_token,env=GITHUB_TOKEN ...), never as a build arg
 ARG TMP_ADDONS_DIR=/tmp/getaddons
 # Possible values: "ce" for community edition, "ee" for enterprise edition
 ARG ODOO_EDITION=ce
@@ -132,9 +132,14 @@ RUN mkdir /tmp/getodoo \
 ARG ODOO_EE_REPO=odoo/enterprise
 ARG ODOO_HEAD_EE=${ODOO_VERSION}
 
-RUN set +x; if [ "$ODOO_EDITION" = "ee" ]; then \
-    mkdir /tmp/getodoo \
-    && (curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" https://api.github.com/repos/$ODOO_EE_REPO/tarball/$ODOO_HEAD_EE | tar -C /tmp/getodoo -xz) \
+RUN --mount=type=secret,id=github_token \
+    set +x; if [ "$ODOO_EDITION" = "ee" ]; then \
+    [ -s /run/secrets/github_token ] || { echo "Secret github_token is required for ODOO_EDITION=ee" >&2; exit 1; }; \
+    ee_hdr="$(mktemp)" \
+    && trap 'rm -f "$ee_hdr"' EXIT \
+    && printf 'Authorization: Bearer %s\n' "$(cat /run/secrets/github_token)" > "$ee_hdr" \
+    && mkdir /tmp/getodoo \
+    && (curl -fsSL -H "@${ee_hdr}" https://api.github.com/repos/$ODOO_EE_REPO/tarball/$ODOO_HEAD_EE | tar -C /tmp/getodoo -xz) \
     && mv /tmp/getodoo/* /tmp/getodoo/odoo_ee \
     && mv /tmp/getodoo/odoo_ee/* /opt/odoo/addons \
     && rm -rf /tmp/getodoo; \
