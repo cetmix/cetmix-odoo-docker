@@ -104,8 +104,11 @@ RUN mkdir /tmp/getodoo \
 ARG ODOO_EE_REPO=odoo/enterprise
 ARG ODOO_HEAD_EE=${ODOO_VERSION}
 
+# Secret contents are not part of the BuildKit cache key. Change this (non-secret) value,
+# e.g. a date, to force a fresh Enterprise download after rotating or revoking the token.
+ARG ODOO_EE_REFRESH
 RUN --mount=type=secret,id=github_token \
-    set +x; if [ "$ODOO_EDITION" = "ee" ]; then \
+    set +x; : "EE refresh: ${ODOO_EE_REFRESH}"; if [ "$ODOO_EDITION" = "ee" ]; then \
     [ -s /run/secrets/github_token ] || { echo "Secret github_token is required for ODOO_EDITION=ee" >&2; exit 1; }; \
     ee_hdr="$(mktemp)" \
     && trap 'rm -f "$ee_hdr"' EXIT \
