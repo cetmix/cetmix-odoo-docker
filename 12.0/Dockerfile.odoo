@@ -17,6 +17,13 @@ ARG GITHUB_TOKEN=<token>
 ARG TMP_ADDONS_DIR=/tmp/getaddons
 
 ARG ODOO_EDITION=ce
+# Install aws cli. Used for s3 backup management and other aws operations
+# Set to "yes" to install
+ARG INSTALL_AWS
+# Install crudini. Used for editing ini files on the fly
+ARG INSTALL_CRUDINI
+# Install phonenumbers. Used by peppol and other addons
+ARG INSTALL_PHONENUMBERS=yes
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
@@ -36,19 +43,35 @@ RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --n
 
 # Install wkhtmltopdf (Bullseye package). Use container arch so --platform linux/amd64 on M1 gets amd64 .deb.
 RUN WKARCH="$(dpkg --print-architecture)" \
-    && curl -sSL "https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bullseye_${WKARCH}.deb" -o /tmp/wkhtml.deb \
+    && case "${WKARCH}" in \
+         amd64) WKHTML_SHA256=9c687f0c58cf50e01f2a6375d2e34372f8feeec56a84690ea113d298fccadd98 ;; \
+         arm64) WKHTML_SHA256=e73435a82cf21ba0387bfee32a193f221fa43e48dda6ed38b12e4c1b70c69728 ;; \
+         *) echo "Unsupported architecture ${WKARCH}"; exit 1 ;; \
+       esac \
+    && curl -fsSL "https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bullseye_${WKARCH}.deb" -o /tmp/wkhtml.deb \
+    && echo "${WKHTML_SHA256}  /tmp/wkhtml.deb" | sha256sum -c - \
     && apt-get update -qq \
     && dpkg --force-depends -i /tmp/wkhtml.deb \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qq -f --no-install-recommends \
     && rm /tmp/wkhtml.deb
 
 # PostgreSQL client (PGDG for Bullseye)
-RUN curl -sSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" > /etc/apt/sources.list.d/pgclient.list \
+RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" > /etc/apt/sources.list.d/pgclient.list \
     && apt-get update -qq \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qq postgresql-client-${POSTGRES_VERSION}
 
 RUN npm install -g rtlcss
+
+# Install AWS CLI if INSTALL_AWS is set to "yes"
+RUN if [ "$INSTALL_AWS" = "yes" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; \
+    fi
+
+# Install crudini if INSTALL_CRUDINI is set to "yes"
+RUN if [ "$INSTALL_CRUDINI" = "yes" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y crudini; \
+    fi
 
 ENV VIRTUAL_ENV=/opt/odoo-venv
 RUN python3 -m venv $VIRTUAL_ENV
@@ -60,6 +83,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
+# Install phonenumbers if INSTALL_PHONENUMBERS is set to "yes"
+RUN if [ "$INSTALL_PHONENUMBERS" = "yes" ]; then \
+    pip3 install phonenumbers; \
+    fi
+
 RUN groupadd --gid ${DOCKER_ODOO_GID} odoo && useradd odoo -u ${DOCKER_ODOO_UID} -g ${DOCKER_ODOO_GID} -m -s /bin/bash
 
 COPY ./entrypoint.sh /
@@ -68,14 +96,14 @@ COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
 ARG ODOO_HEAD=${ODOO_VERSION}
 ARG ODOO_ORG_REPO=odoo/odoo
 RUN mkdir /tmp/getodoo \
-    && (curl -sSL https://github.com/$ODOO_ORG_REPO/tarball/$ODOO_HEAD | tar -C /tmp/getodoo -xz) \
+    && (curl -fsSL https://github.com/$ODOO_ORG_REPO/tarball/$ODOO_HEAD | tar -C /tmp/getodoo -xz) \
     && mv /tmp/getodoo/* /opt/odoo \
     && rmdir /tmp/getodoo
 
 ARG ODOO_EE_REPO=odoo/enterprise
 ARG ODOO_HEAD_EE=${ODOO_VERSION}
 
-RUN if [ "$ODOO_EDITION" = "ee" ]; then \
+RUN set +x; if [ "$ODOO_EDITION" = "ee" ]; then \
     mkdir /tmp/getodoo \
     && (curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" https://api.github.com/repos/$ODOO_EE_REPO/tarball/$ODOO_HEAD_EE | tar -C /tmp/getodoo -xz) \
     && mv /tmp/getodoo/* /tmp/getodoo/odoo_ee \
