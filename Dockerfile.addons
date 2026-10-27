@@ -31,9 +31,14 @@ ENV GIT_USERNAME="Doge"
 ENV GIT_EMAIL="doge@meme.example.com"
 
 # Run git-aggregator
+# .git metadata is removed in the same step: remote URLs may contain the token
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN \
+    if grep -q 'GITHUB_TOKEN' $TMP_ADDONS_DIR/addons.yml && [ -z "$GITHUB_TOKEN" ]; then \
+        echo 'addons.yml uses GITHUB_TOKEN: pass the BuildKit secret github_token' >&2; exit 1; \
+    fi && \
     git config --global user.email ${GIT_EMAIL} && git config --global user.name ${GIT_USERNAME} && \
-    cd $TMP_ADDONS_DIR && gitaggregate -c  $TMP_ADDONS_DIR/addons.yml --expand-env
+    cd $TMP_ADDONS_DIR && gitaggregate -c  $TMP_ADDONS_DIR/addons.yml --expand-env && \
+    find $TMP_ADDONS_DIR -name .git -prune -exec rm -rf {} +
 
 # Prepare the destination directory
 ENV ADDONS_DIR=/opt/extra-addons

@@ -58,7 +58,7 @@ RUN WKARCH="$(dpkg --print-architecture)" \
 
 # PostgreSQL client (PGDG for Bullseye)
 RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" > /etc/apt/sources.list.d/pgclient.list \
+    && echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt-archive.postgresql.org/pub/repos/apt/ bullseye-pgdg main" > /etc/apt/sources.list.d/pgclient.list \
     && apt-get update -qq \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qq postgresql-client-${POSTGRES_VERSION}
 
